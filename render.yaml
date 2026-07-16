@@ -2,6 +2,15 @@
 # + Redis) from this repo. In the Render dashboard: New → Blueprint → point at
 # this repository, then fill in the secret env vars it prompts for.
 #
+# NOTE: everything below uses FREE instance types so no payment card is needed.
+# Free-tier trade-offs:
+#   - Web services spin down after ~15 min idle; the first request after that
+#     takes up to a minute to wake.
+#   - The weekly scheduler only fires while the backend is awake — trigger
+#     rebalances manually from the dashboard, or upgrade the backend to
+#     `starter` for an always-on process.
+#   - Free Postgres databases expire after 30 days unless upgraded.
+#
 # After the first deploy, set CORS_ORIGINS on the backend to the frontend's
 # public URL, and BACKEND_INTERNAL_URL on the frontend to the backend's URL.
 
@@ -10,7 +19,7 @@ services:
     name: aegis-backend
     runtime: docker
     rootDir: backend
-    plan: starter
+    plan: free
     healthCheckPath: /api/health
     envVars:
       - key: APP_ENV
@@ -51,7 +60,7 @@ services:
     name: aegis-frontend
     runtime: docker
     rootDir: frontend
-    plan: starter
+    plan: free
     envVars:
       - key: BACKEND_INTERNAL_URL
         sync: false # set to https://<your-backend>.onrender.com
@@ -63,4 +72,4 @@ services:
 
 databases:
   - name: aegis-db
-    plan: basic-256mb
+    plan: free
