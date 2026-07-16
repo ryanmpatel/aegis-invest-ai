@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -60,6 +61,11 @@ def get_engine() -> AsyncEngine:
         kwargs: dict = {"echo": False, "pool_pre_ping": True}
         if url.startswith("sqlite"):
             kwargs.pop("pool_pre_ping")
+        if os.environ.get("VERCEL"):
+            # Serverless: connections must not outlive the invocation.
+            from sqlalchemy.pool import NullPool
+
+            kwargs["poolclass"] = NullPool
         _engine = create_async_engine(url, **kwargs)
     return _engine
 

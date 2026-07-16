@@ -1,0 +1,13 @@
+# Serverless (Vercel) runtime dependencies — the slim subset actually imported
+# at runtime. pandas/numpy/scikit-learn are optional research extras and are
+# deliberately absent (nothing in app/ imports them).
+fastapi>=0.115
+pydantic>=2.9
+pydantic-settings>=2.6
+sqlalchemy[asyncio]>=2.0.36
+asyncpg>=0.30
+psycopg2-binary>=2.9
+greenlet>=3.0
+httpx>=0.27
+apscheduler>=3.10,<4
+redis>=5.2

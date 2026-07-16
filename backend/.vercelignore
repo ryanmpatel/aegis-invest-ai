@@ -1,0 +1,12 @@
+.venv
+tests
+.hypothesis
+.pytest_cache
+.mypy_cache
+.ruff_cache
+__pycache__
+*.db
+alembic
+alembic.ini
+aegis_invest_ai.egg-info
+Dockerfile

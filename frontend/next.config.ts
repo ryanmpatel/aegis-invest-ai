@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     const backend =
       process.env.BACKEND_INTERNAL_URL ||
       (process.env.NODE_ENV === "production"
-        ? "https://aegis-backend.onrender.com"
+        ? "https://aegis-backend-five.vercel.app"
         : "http://localhost:8000");
     return [{ source: "/api/:path*", destination: `${backend}/api/:path*` }];
   },

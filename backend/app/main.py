@@ -28,8 +28,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         raise RuntimeError("Live trading is permanently disabled in this build.")
     if settings.app_env != "production":
         # Dev/test convenience: create tables when migrations haven't run.
-        async with get_engine().begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        # Never let a broken database kill startup — /api/health reports it.
+        try:
+            async with get_engine().begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+        except Exception:
+            log_event(
+                logger, "startup_db_unavailable",
+                "Table auto-create failed; starting anyway (database degraded)",
+                severity=30,
+            )
     start_scheduler(settings)
     log_event(
         logger, "startup",
