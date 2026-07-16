@@ -26,18 +26,26 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging()
     if settings.live_trading_enabled:  # config validation already rejects this
         raise RuntimeError("Live trading is permanently disabled in this build.")
-    if settings.app_env != "production":
-        # Dev/test convenience: create tables when migrations haven't run.
-        # Never let a broken database kill startup — /api/health reports it.
-        try:
-            async with get_engine().begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-        except Exception:
-            log_event(
-                logger, "startup_db_unavailable",
-                "Table auto-create failed; starting anyway (database degraded)",
-                severity=30,
-            )
+    # Create missing tables at startup (idempotent; a sentinel-table check
+    # keeps warm starts cheap). Alembic remains the source of truth for
+    # migrations on long-lived servers; this covers fresh/serverless databases.
+    # Never let a broken database kill startup — /api/health reports it.
+    try:
+        async with get_engine().begin() as conn:
+
+            def _bootstrap_tables(sync_conn) -> None:
+                from sqlalchemy import inspect
+
+                if not inspect(sync_conn).has_table("scheduler_configs"):
+                    Base.metadata.create_all(sync_conn)
+
+            await conn.run_sync(_bootstrap_tables)
+    except Exception:
+        log_event(
+            logger, "startup_db_unavailable",
+            "Table auto-create failed; starting anyway (database degraded)",
+            severity=30,
+        )
     start_scheduler(settings)
     log_event(
         logger, "startup",
