@@ -19,9 +19,11 @@ target_metadata = Base.metadata
 
 
 def _database_url() -> str:
+    from app.database import normalize_database_url
+
     url = os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
-    # Alembic runs sync: strip async driver suffixes.
-    return url.replace("+asyncpg", "").replace("+aiosqlite", "")
+    # Alembic runs sync; normalize provider-style URLs (Neon/Heroku/Render).
+    return normalize_database_url(url, driver="sync")
 
 
 def run_migrations_offline() -> None:
