@@ -1,0 +1,62 @@
+[project]
+name = "aegis-invest-ai"
+version = "0.1.0"
+description = "AegisInvest AI — automated investing research, backtesting and paper-trading platform (paper trading only; live trading permanently disabled in this codebase)."
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "alembic>=1.14",
+    "asyncpg>=0.30",
+    "aiosqlite>=0.20",
+    "redis>=5.2",
+    "apscheduler>=3.10,<4",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "httpx>=0.27",
+    "greenlet>=3.0",
+]
+
+[project.optional-dependencies]
+alpaca = ["alpaca-py>=0.33"]
+ml = ["scikit-learn>=1.5"]
+ai = ["anthropic>=0.40"]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "hypothesis>=6.115",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "types-python-dateutil",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning:apscheduler.*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM", "RUF"]
+ignore = ["B008", "SIM108"]  # B008: FastAPI Depends() in defaults is idiomatic
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = false
+disallow_untyped_defs = false

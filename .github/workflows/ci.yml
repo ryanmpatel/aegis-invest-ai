@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint (ruff)
+        run: python -m ruff check app tests
+      - name: Type check (mypy)
+        run: python -m mypy app
+      - name: Tests
+        run: python -m pytest -q
+        env:
+          APP_ENV: test
+      - name: Dependency audit (non-blocking)
+        run: pip install pip-audit && pip-audit || true
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install
+        run: npm install --no-fund --no-audit
+      - name: Type check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Dependency audit (non-blocking)
+        run: npm audit --omit=dev || true
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure no .env or key material is committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$' || (echo ".env committed!" && exit 1)
+          ! git grep -InE 'PK[A-Z0-9]{16,20}' -- ':!*.md' || (echo "Possible Alpaca key committed!" && exit 1)
